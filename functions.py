@@ -38,12 +38,9 @@ def assess(m,n,g,f,C,output):
     
 def plots(x_range,g,f,output):
     fig = plt.figure(figsize=(4, 3))
-
-    gs = fig.add_gridspec(2, 2, width_ratios=(bin, 1), height_ratios=(1, bin),
-                        left=0.1, right=0.9, bottom=0.1, top=0.9,
-                        wspace=0.05, hspace=0.05)
+    #gs = fig.add_gridspec(2, 2, width_ratios=(bin, 1), height_ratios=(1, bin),left=0.1, right=0.9, bottom=0.1, top=0.9,wspace=0.05, hspace=0.05)
     # Create the Axes.
-    ax = fig.add_subplot(gs[1, 0])
+    #ax = fig.add_subplot(gs[1, 0])
     ax.pcolormesh(x_range, x_range, output, cmap='Blues')
     # ax_histx = fig.add_subplot(gs[0, 0], sharex=ax)
     # ax_histy = fig.add_subplot(gs[1, 1], sharey=ax)
