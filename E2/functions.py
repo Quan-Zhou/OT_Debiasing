@@ -101,9 +101,8 @@ def total_repair(C,e,px,ptx,V,K):
             for i in I:
                 gamma_dict[loop*L+3][i,j]=np.exp(nu*V.item(i))*tmp.item(i,j)
         gamma_dict[loop*L+3]=np.matrix(gamma_dict[loop*L+3])
-
-        if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-9:  #'tr violation:'
-                break;
+        # if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-9:  #'tr violation:'
+        #         break;
     #assess(bin,dist['x'],dist['t_x'],C,V,gamma_dict[K*L])
     return gamma_dict[loop*L+3]
 
@@ -169,8 +168,8 @@ def partial_repair(C,e,px,ptx,V,theta_scale,K):
             for i in I:
                 gamma_dict[loop*L+3][i,j]=np.exp(-nu*V.item(i))*tmp.item(i,j)
         gamma_dict[loop*L+3]=np.matrix(gamma_dict[loop*L+3])
-        if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-9:  #'tr violation:'
-            break;
+        # if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-9:  #'tr violation:'
+        #     break;
     return gamma_dict[loop*L+3]
 
 def empirical_distribution(sub,x_range):
@@ -297,8 +296,8 @@ def DisparateImpact_postprocess(df_test,y_pred_tmp):
     df_test_tmp.insert(loc=0, column='f', value=y_pred_tmp)
     numerator=sum(df_test_tmp[(df_test_tmp['S']==0)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==0]['W'])
     denominator=sum(df_test_tmp[(df_test_tmp['S']==1)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==1]['W'])
-    # if numerator==denominator: # to avoid zero division error
-    #     return 1
+    if numerator==denominator: # to avoid zero division error
+        return 1
     return numerator/denominator
 
 def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,clf):
