@@ -23,12 +23,14 @@ def tmp_generator(gamma_dict,num,q_dict,q_num,L):
     for i in range(bin):
         for j in range(bin):
             if gamma_dict[num-L].item(i,j) != 0:
-                tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
                 tmp_q[i,j]=q.item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
+                tmp_gamma[i,j]=tmp_q[i,j]*gamma_dict[num-1].item(i,j)
+                # tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
             else:
                 # to avoid zero division error
-                tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/(1.0e-9) 
                 tmp_q[i,j]=q.item(i,j)*gamma_dict[num-L-1].item(i,j)/(1.0e-9)
+                tmp_gamma[i,j]=tmp_q[i,j]*gamma_dict[num-1].item(i,j)
+                # tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/(1.0e-9) 
     return np.matrix(tmp_gamma),np.matrix(tmp_q)     
 
 def newton(fun,dfun,a, stepmax, tol):
