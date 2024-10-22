@@ -188,13 +188,13 @@ def DisparateImpact(X_test,y_pred):
     
 def rdata_analysis(rdata,x_range,x_name):
     rdist=dict()
-    pivot=pd.pivot_table(rdata,index=x_name,values=['W'],aggfunc=[np.sum])[('sum','W')]
+    pivot=pd.pivot_table(rdata,index=x_name,values=['W'],aggfunc=[np.sum],observed=False)[("sum",'W')]
     rdist['x']= np.array([pivot[i] for i in x_range])/sum([pivot[i] for i in x_range]) #empirical_distribution(rdata,x_range)
     if rdata[rdata['S']==0].shape[0]>0:
-        pivot0=pd.pivot_table(rdata[rdata['S']==0],index=x_name,values=['W'],aggfunc=[np.sum])[('sum','W')]
+        pivot0=pd.pivot_table(rdata[rdata['S']==0],index=x_name,values=['W'],aggfunc=[np.sum],observed=False)[("sum",'W')]
         rdist['x_0']=np.array([pivot0[i] if i in list(pivot0.index) else 0 for i in x_range])/sum([pivot0[i] if i in list(pivot0.index) else 0 for i in x_range]) #empirical_distribution(rdata[rdata['S']==0],x_range)
     if rdata[rdata['S']==1].shape[0]>0:
-        pivot1=pd.pivot_table(rdata[rdata['S']==1],index=x_name,values=['W'],aggfunc=[np.sum])[('sum','W')]
+        pivot1=pd.pivot_table(rdata[rdata['S']==1],index=x_name,values=['W'],aggfunc=[np.sum],observed=False)[("sum",'W')]
         rdist['x_1']=np.array([pivot1[i] if i in list(pivot1.index) else 0 for i in x_range])/sum([pivot1[i] if i in list(pivot1.index) else 0 for i in x_range]) #empirical_distribution(rdata[rdata['S']==1],x_range)
     return rdist
 
@@ -251,48 +251,6 @@ def projection_higher(df,coupling_matrix,x_range,x_list,var_list):
         sub=pd.DataFrame(data=sub_dict, index=[*range(bin)])
         df_t=pd.concat([df_t,sub],ignore_index=True) #pd.concat([df_t,samples_groupby(sub,x_list)], ignore_index=True)
     return df_t
-
-# def projection_higher(df,coupling_matrix,x_range,x_list,var_list):
-#     df=df.drop(columns=x_list)
-#     bin=len(x_range)
-#     dim=len(x_list)
-#     arg_list=[elem for elem in var_list if elem not in x_list]
-#     df=df[arg_list+['X','S','W','Y']]
-#     coupling=coupling_matrix.A1.reshape((bin,bin))
-#     df_t=pd.DataFrame(columns=arg_list+['X','S','W','Y'])
-#     for i in range(df.shape[0]):
-#         orig=df.iloc[i]
-#         loc=np.where([x_range[i]==orig['X'] for i in range(bin)])[0][0]
-#         rows=np.nonzero(coupling[loc,:])[0]
-#         sub_dict={'X':[x_range[r] for r in rows],'W':list(coupling[loc,rows]/(sum(coupling[loc,rows]))*orig['W'])}
-#         sub_dict.update({var:[orig[var]]*len(rows) for var in arg_list+['S','Y']})
-#         sub=pd.DataFrame(data=sub_dict, index=rows)
-#         df_t=pd.concat([df_t,sub],ignore_index=True)#pd.concat([df_t,samples_groupby(sub,x_list)], ignore_index=True)
-#     df_t=df_t.groupby(by=list(chain(*[arg_list,'X','S','Y'])),as_index=False).sum()
-#     for d in range(dim):
-#         df_t[x_list[d]]=[df_t['X'][r][d] for r in range(df_t.shape[0])]
-#     return df_t[var_list+['S','W','Y']]
-
-# def projection_higher_wlabel(df,coupling_matrix,x_range,x_list,var_list):
-#     dim=len(x_list)
-#     #df=df.drop(columns=x_list)
-#     bin=len(x_range)
-#     arg_list=[elem for elem in var_list if elem not in x_list]
-#     df=df[arg_list+['X','S','W']]
-#     coupling=coupling_matrix.A1.reshape((bin,bin))
-#     df_t=pd.DataFrame(columns=arg_list+['X','S','W'])
-#     for i in range(df.shape[0]):
-#         orig=df.iloc[i]
-#         loc=np.where([x_range[b]==orig['X'] for b in range(bin)])[0][0]
-#         rows=np.nonzero(coupling[loc,:])[0]
-#         sub_dict={'X':[x_range[r] for r in rows],'W':list(coupling[loc,rows]/(sum(coupling[loc,rows]))*orig['W'])}
-#         sub_dict.update({var:[orig[var]]*len(rows) for var in arg_list+['S']})
-#         sub=pd.DataFrame(data=sub_dict, index=rows)
-#         df_t=pd.concat([df_t,sub],ignore_index=True)#pd.concat([df_t,samples_groupby(sub,x_list)], ignore_index=True)
-#     df_t=df_t.groupby(by=list(chain(*[arg_list,'X','S'])),as_index=False).sum()
-#     for d in range(dim):
-#         df_t[x_list[d]]=[df_t['X'][r][d] for r in range(df_t.shape[0])]
-#     return df_t[var_list+['S','W']]
 
 def postprocess(df,coupling_matrix,x_list,x_range,var_list,var_range,clf):
     dim=len(x_list)
