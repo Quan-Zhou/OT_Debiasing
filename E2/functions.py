@@ -22,15 +22,9 @@ def tmp_generator(gamma_dict,num,q_dict,q_num,L):
     tmp_q=np.zeros((bin,bin))
     for i in range(bin):
         for j in range(bin):
-            if gamma_dict[num-L].item(i,j) != 0:
-                tmp_q[i,j]=q.item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
-                tmp_gamma[i,j]=tmp_q[i,j]*gamma_dict[num-1].item(i,j)
-                # tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
-            else:
-                # to avoid zero division error
-                raise Exception("zero division error")
-                # tmp_q[i,j]=q.item(i,j)*gamma_dict[num-L-1].item(i,j)/(1.0e-9)
-                # tmp_gamma[i,j]=tmp_q[i,j]*gamma_dict[num-1].item(i,j)
+            tmp_q[i,j]=q.item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
+            tmp_gamma[i,j]=tmp_q[i,j]*gamma_dict[num-1].item(i,j)
+            # tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
     return np.matrix(tmp_gamma),np.matrix(tmp_q)     
 
 def newton(fun,dfun,a, stepmax, tol):
@@ -85,25 +79,30 @@ def total_repair(C,e,px,ptx,V,K):
     L=3
     q_dict=dict()
     for loop in range(1,K):
+        if np.any(gamma_dict[(loop-1)*L+1]==0):
+            break
         tmp,q_dict[(loop-1)*L+1]=tmp_generator(gamma_dict,loop*L+1,q_dict,(loop-2)*L+1,L) #np.matrix(gamma_dict[3].A1*gamma_dict[0].A1/gamma_dict[1].A1)
         gamma_dict[loop*L+1]=np.matrix(np.diag((px/(tmp @ bbm1)).A1))@tmp
-
+        if np.any(gamma_dict[(loop-1)*L+2]==0):
+            break
         tmp,q_dict[(loop-1)*L+2]=tmp_generator(gamma_dict,loop*L+2,q_dict,(loop-2)*L+2,L)  #np.matrix(gamma_dict[4].A1*gamma_dict[1].A1/gamma_dict[2].A1)
         gamma_dict[loop*L+2]=tmp@np.matrix(np.diag((ptx/(tmp.T @ bbm1)).A1))
 
         # step 3
+        if np.any(gamma_dict[(loop-1)*L+3]==0):
+            break
         tmp,q_dict[(loop-1)*L+3]=tmp_generator(gamma_dict,loop*L+3,q_dict,(loop-2)*L+3,L)  #np.matrix(gamma_dict[5].A1*gamma_dict[2].A1/gamma_dict[3].A1)
-        J=np.where(~((abs(np.matrix(tmp).T @ V).A1)<=1.0e-4))[0].tolist()
+        J=np.where(~((abs(np.matrix(tmp).T @ V).A1)<=1.0e-9))[0].tolist()
         gamma_dict[loop*L+3]=np.copy(tmp)
         for j in J:
             fun = lambda z: sum(tmp.item(i,j)*V.item(i)*np.exp(z*V.item(i)) for i in I)
             dfun = lambda z: sum(tmp.item(i,j)*(V.item(i))**2*np.exp(z*V.item(i)) for i in I)
-            nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-5) 
+            nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-9) 
             for i in I:
                 gamma_dict[loop*L+3][i,j]=np.exp(nu*V.item(i))*tmp.item(i,j)
         gamma_dict[loop*L+3]=np.matrix(gamma_dict[loop*L+3])
 
-        if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-5:  #'tr violation:'
+        if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-9:  #'tr violation:'
                 break;
     #assess(bin,dist['x'],dist['t_x'],C,V,gamma_dict[K*L])
     return gamma_dict[loop*L+3]
@@ -141,13 +140,18 @@ def partial_repair(C,e,px,ptx,V,theta_scale,K):
     L=3
     q_dict=dict()
     for loop in range(1,K):
+        if np.any(gamma_dict[(loop-1)*L+1]==0):
+            break
         tmp,q_dict[(loop-1)*L+1]=tmp_generator(gamma_dict,loop*L+1,q_dict,(loop-2)*L+1,L) #np.matrix(gamma_dict[3].A1*gamma_dict[0].A1/gamma_dict[1].A1)
         gamma_dict[loop*L+1]=np.matrix(np.diag((px/(tmp @ bbm1)).A1))@tmp
-
+        if np.any(gamma_dict[(loop-1)*L+2]==0):
+            break
         tmp,q_dict[(loop-1)*L+2]=tmp_generator(gamma_dict,loop*L+2,q_dict,(loop-2)*L+2,L)  #np.matrix(gamma_dict[4].A1*gamma_dict[1].A1/gamma_dict[2].A1)
         gamma_dict[loop*L+2]=tmp@np.matrix(np.diag((ptx/(tmp.T @ bbm1)).A1))
 
         # step 3
+        if np.any(gamma_dict[(loop-1)*L+3]==0):
+            break
         tmp,q_dict[(loop-1)*L+3]=tmp_generator(gamma_dict,loop*L+3,q_dict,(loop-2)*L+3,L)  #np.matrix(gamma_dict[5].A1*gamma_dict[2].A1/gamma_dict[3].A1)
         Jplus=np.where(~((np.matrix(tmp).T @ V).A1 <=theta.A1))[0].tolist()
         Jminus=np.where(~((np.matrix(tmp).T @ V).A1>=-theta.A1))[0].tolist()
