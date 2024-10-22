@@ -28,9 +28,9 @@ def tmp_generator(gamma_dict,num,q_dict,q_num,L):
                 # tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/gamma_dict[num-L].item(i,j)
             else:
                 # to avoid zero division error
-                tmp_q[i,j]=q.item(i,j)*gamma_dict[num-L-1].item(i,j)/(1.0e-9)
-                tmp_gamma[i,j]=tmp_q[i,j]*gamma_dict[num-1].item(i,j)
-                # tmp_gamma[i,j]=q.item(i,j)*gamma_dict[num-1].item(i,j)*gamma_dict[num-L-1].item(i,j)/(1.0e-9) 
+                raise Exception("zero division error")
+                # tmp_q[i,j]=q.item(i,j)*gamma_dict[num-L-1].item(i,j)/(1.0e-9)
+                # tmp_gamma[i,j]=tmp_q[i,j]*gamma_dict[num-1].item(i,j)
     return np.matrix(tmp_gamma),np.matrix(tmp_q)     
 
 def newton(fun,dfun,a, stepmax, tol):
@@ -126,13 +126,13 @@ def partial_repair(C,e,px,ptx,V,theta_scale,K):
     for j in Jplus:
         fun = lambda z: sum(gamma_dict[2].item(i,j)*V.item(i)*np.exp(-z*V.item(i)) for i in I)-theta.item(j)
         dfun = lambda z: -sum(gamma_dict[2].item(i,j)*(V.item(i))**2*np.exp(-z*V.item(i)) for i in I)
-        nu = newton(fun,dfun,0.5,stepmax = 50,tol = 1.0e-5)
+        nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-9)
         for i in I:
             gamma_dict[3][i,j]=np.exp(-nu*V.item(i))*gamma_dict[2].item(i,j)
     for j in Jminus:
         fun = lambda z: sum(gamma_dict[2].item(i,j)*V.item(i)*np.exp(-z*V.item(i)) for i in I)+theta.item(j)
         dfun = lambda z: -sum(gamma_dict[2].item(i,j)*(V.item(i))**2*np.exp(-z*V.item(i)) for i in I)
-        nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-5)
+        nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-9)
         for i in I:
             gamma_dict[3][i,j]=np.exp(-nu*V.item(i))*gamma_dict[2].item(i,j)
     gamma_dict[3]=np.matrix(gamma_dict[3])
@@ -155,17 +155,17 @@ def partial_repair(C,e,px,ptx,V,theta_scale,K):
         for j in Jplus:
             fun = lambda z: sum(tmp.item(i,j)*V.item(i)*np.exp(-z*V.item(i)) for i in I)-theta.item(j)
             dfun = lambda z: -sum(tmp.item(i,j)*(V.item(i))**2*np.exp(-z*V.item(i)) for i in I)
-            nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-5) 
+            nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-9) 
             for i in I:
                 gamma_dict[loop*L+3][i,j]=np.exp(-nu*V.item(i))*tmp.item(i,j)
         for j in Jminus:
             fun = lambda z: sum(tmp.item(i,j)*V.item(i)*np.exp(-z*V.item(i)) for i in I)+theta.item(j)
             dfun = lambda z: -sum(tmp.item(i,j)*(V.item(i))**2*np.exp(-z*V.item(i)) for i in I)
-            nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-5) 
+            nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-9) 
             for i in I:
                 gamma_dict[loop*L+3][i,j]=np.exp(-nu*V.item(i))*tmp.item(i,j)
         gamma_dict[loop*L+3]=np.matrix(gamma_dict[loop*L+3])
-        if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-5:  #'tr violation:'
+        if sum(abs(gamma_dict[loop*L+3].T@V))<=1.0e-9:  #'tr violation:'
             break;
     return gamma_dict[loop*L+3]
 
