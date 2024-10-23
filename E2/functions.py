@@ -70,7 +70,7 @@ def total_repair(C,e,px,ptx,V,K):
     for j in J:
         fun = lambda z: sum(gamma_dict[2].item(i,j)*V.item(i)*np.exp(z*V.item(i)) for i in I)
         dfun = lambda z: sum(gamma_dict[2].item(i,j)*(V.item(i))**2*np.exp(z*V.item(i)) for i in I)
-        nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-5) 
+        nu = newton(fun,dfun,0,stepmax = 50,tol = 1.0e-9) 
         for i in I:
             gamma_dict[3][i,j]=np.exp(nu*V.item(i))*gamma_dict[2].item(i,j)
     gamma_dict[3]=np.matrix(gamma_dict[3])
@@ -296,8 +296,8 @@ def DisparateImpact_postprocess(df_test,y_pred_tmp):
     df_test_tmp.insert(loc=0, column='f', value=y_pred_tmp)
     numerator=sum(df_test_tmp[(df_test_tmp['S']==0)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==0]['W'])
     denominator=sum(df_test_tmp[(df_test_tmp['S']==1)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==1]['W'])
-    if numerator==denominator: # to avoid zero division error
-        return 1
+    # if numerator==denominator: # to avoid zero division error
+    #     return 1
     return numerator/denominator
 
 def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,clf):
