@@ -38,7 +38,7 @@ def newton(fun,dfun,a, stepmax, tol):
     return b 
 
 # simplist
-def baseline(C,e,px,ptx,V,K):
+def baseline(C,e,px,ptx,K):
     # V is not used
     bin=len(px)
     bbm1=np.matrix(np.ones(bin)).T
@@ -244,6 +244,7 @@ def projection_higher(df,coupling_matrix,x_range,x_list,var_list):
     df=df.drop(columns=x_list)
     bin=len(x_range)
     arg_list=[elem for elem in var_list if elem not in x_list]
+    # df=df.groupby(by=arg_list+['X','S','Y'],as_index=False).sum()
     df=df[arg_list+['X','S','W','Y']]
     coupling=coupling_matrix.A1.reshape((bin,bin))
     df_t=pd.DataFrame(columns=arg_list+['X','S','W','Y'])
@@ -257,7 +258,8 @@ def projection_higher(df,coupling_matrix,x_range,x_list,var_list):
         df_t=pd.concat([df_t,sub],ignore_index=True) #pd.concat([df_t,samples_groupby(sub,x_list)], ignore_index=True)
     return df_t
 
-def postprocess(df,coupling_matrix,x_list,x_range,var_list,var_range,clf):
+def postprocess(df,coupling_matrix,x_list,x_range,var_list,var_range,clf,thresh):
+    # df=df.groupby(by=var_list+['X','S','Y'],as_index=False).sum()
     dim=len(x_list)
     var_dim=len(var_list)
     bin=len(x_range)
@@ -280,7 +282,7 @@ def postprocess(df,coupling_matrix,x_list,x_range,var_list,var_range,clf):
             sub[arg]=var_tmp[arg] 
         sub=sub[var_list]
         totalweight=sum(coupling[loc,:])
-        pred=int(sum(coupling[loc,:]/totalweight*clf.predict(np.array(sub).reshape(-1,var_dim)))>0.1)
+        pred=int(sum(coupling[loc,:]/totalweight*clf.predict(np.array(sub).reshape(-1,var_dim)))>thresh)
         pred_repaired.update({var_range[i]:pred})
         # prob=clf.predict_log_proba(np.array(sub).reshape(-1,var_dim)) #log is better
         # prob0=sum(prob[:,0]*coupling[loc,:]/totalweight)
@@ -300,7 +302,7 @@ def DisparateImpact_postprocess(df_test,y_pred_tmp):
     #     return 1
     return numerator/denominator
 
-def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,clf):
+def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,clf,thresh):
     bin=len(x_range)
     coupling_bary=coupling_bary_matrix.A1.reshape((bin,bin))
     s0=df[df['S']==0]
@@ -322,8 +324,8 @@ def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,c
     projectedDist_s1=rdata_analysis(projection_higher(s1,np.matrix(coupling1),x_range,x_list,var_list),x_range,'X')['x_1']
     # print('tv distance between projected S-wise distributions',sum(abs(projectedDist_s0-projectedDist_s1))/2)
 
-    s0.insert(loc=0, column='f', value=postprocess(s0,np.matrix(coupling0),x_list,x_range,var_list,var_range,clf))
-    s1.insert(loc=0, column='f', value=postprocess(s1,np.matrix(coupling1),x_list,x_range,var_list,var_range,clf))
+    s0.insert(loc=0, column='f', value=postprocess(s0,np.matrix(coupling0),x_list,x_range,var_list,var_range,clf,thresh))
+    s1.insert(loc=0, column='f', value=postprocess(s1,np.matrix(coupling1),x_list,x_range,var_list,var_range,clf,thresh))
     s_concate=pd.concat([s0,s1], ignore_index=False)
     s_concate.sort_index()
     return np.array(s_concate['f']),sum(abs(projectedDist_s0-projectedDist_s1))/2
