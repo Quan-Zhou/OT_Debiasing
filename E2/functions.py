@@ -329,6 +329,9 @@ def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,c
     return np.array(s_concate['f']),sum(abs(projectedDist_s0-projectedDist_s1))/2
 
 def assess_tv(df,coupling_matrix,x_range,x_list,var_list):
-    df_project=projection_higher(df,coupling_matrix,x_range,x_list,var_list)
-    rdist=rdata_analysis(df_project,x_range,'X')
+    if len(coupling_matrix) > 0:
+        df_project=projection_higher(df,coupling_matrix,x_range,x_list,var_list)
+    else:
+        df_project = df
+    rdist=rdata_analysis(df_project[['X','S','W']],x_range,'X')
     return sum(abs(rdist['x_0']-rdist['x_1']))/2
