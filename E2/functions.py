@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
+from operator import itemgetter
 
 #from itertools import chain
 
@@ -241,7 +242,8 @@ def c_generate_higher(x_range,weight):
     return C
 
 def projection_higher(df,coupling_matrix,x_range,x_list,var_list):
-    df=df.drop(columns=x_list)
+    if set(x_list).issubset(df.columns):
+        df=df.drop(columns=x_list)
     bin=len(x_range)
     arg_list=[elem for elem in var_list if elem not in x_list]
     # df=df.groupby(by=arg_list+['X','S','Y'],as_index=False).sum()
@@ -289,17 +291,17 @@ def postprocess(df,coupling_matrix,x_list,x_range,var_list,var_range,clf,thresh)
         # prob1=sum(prob[:,1]*coupling[loc,:]/totalweight)
         # pred_repaired.update({var_range[i]:int(prob0<prob1)})
     if var_dim>1:
-        return np.array([pred_repaired[tuple(df[var_list].iloc[i])] for i in range(df.shape[0])])
+        return np.array(itemgetter(*list(zip(*[df[c] for c in var_list])))(pred_repaired))
+        # return np.array([pred_repaired[tuple(df[var_list].iloc[i])] for i in range(df.shape[0])])
     else:
-        return np.array([pred_repaired[df[var_list[0]].iloc[i]] for i in range(df.shape[0])])
+        return np.array(itemgetter(*list(df[var_list[0]]))(pred_repaired))
+        # return np.array([pred_repaired[df[var_list[0]].iloc[i]] for i in range(df.shape[0])])
 
 def DisparateImpact_postprocess(df_test,y_pred_tmp):
     df_test_tmp=df_test[:]
     df_test_tmp.insert(loc=0, column='f', value=y_pred_tmp)
     numerator=sum(df_test_tmp[(df_test_tmp['S']==0)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==0]['W'])
     denominator=sum(df_test_tmp[(df_test_tmp['S']==1)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==1]['W'])
-    # if numerator==denominator: # to avoid zero division error
-    #     return 1
     return numerator/denominator
 
 def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,clf,thresh):
