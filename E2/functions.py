@@ -297,11 +297,11 @@ def postprocess(df,coupling_matrix,x_list,x_range,var_list,var_range,clf,thresh)
         return np.array(itemgetter(*list(df[var_list[0]]))(pred_repaired))
         # return np.array([pred_repaired[df[var_list[0]].iloc[i]] for i in range(df.shape[0])])
 
-def DisparateImpact_postprocess(df_test,y_pred_tmp):
+def DisparateImpact_postprocess(df_test,y_pred_tmp,favorable_label=1):
     df_test_tmp=df_test[:]
     df_test_tmp.insert(loc=0, column='f', value=y_pred_tmp)
-    numerator=sum(df_test_tmp[(df_test_tmp['S']==0)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==0]['W'])
-    denominator=sum(df_test_tmp[(df_test_tmp['S']==1)&(df_test_tmp['f']==1)]['W'])/sum(df_test_tmp[df_test_tmp['S']==1]['W'])
+    numerator=sum(df_test_tmp[(df_test_tmp['S']==0)&(df_test_tmp['f']==favorable_label)]['W'])/sum(df_test_tmp[df_test_tmp['S']==0]['W'])
+    denominator=sum(df_test_tmp[(df_test_tmp['S']==1)&(df_test_tmp['f']==favorable_label)]['W'])/sum(df_test_tmp[df_test_tmp['S']==1]['W'])
     return numerator/denominator
 
 def postprocess_bary(df,coupling_bary_matrix,x_list,x_range,var_list,var_range,clf,thresh):
